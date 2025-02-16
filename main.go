@@ -51,7 +51,7 @@ func main() {
 	flag.StringVar(&fingerprintsPath, "fingerprints", "", "Path to local fingerprints JSON file (override default cache)")
 	flag.BoolVar(&updateVal, "update", false, "Force update of fingerprints from GitHub into local cache")
 	flag.Parse()
-
+ 
 	if !silentVal {
 		fmt.Println("        _____       _     _             _")
 		fmt.Println("       /  ___|     | |   | |           | |")
@@ -63,6 +63,7 @@ func main() {
 		fmt.Println()
 	}
 
+ 
 	// 1) Load fingerprints
 	if fingerprintsPath != "" {
 		// If user provided a local file, load from that path.
@@ -144,10 +145,16 @@ func main() {
 // - If the cache file does not exist, it downloads it
 func ensureCache() error {
 	cachePath := getCacheFilePath()
-
-	if updateVal {
-		return downloadFingerprintsTo(cachePath)
-	}
+ if updateVal && fingerprintsPath == "" {
+    cachePath := getCacheFilePath()
+    err := downloadFingerprintsTo(cachePath)
+  if err != nil {
+      fmt.Fprintf(os.Stderr, "Error updating fingerprints: %v\n", err)
+      os.Exit(1)
+    }
+    fmt.Println("Fingerprints updated.")
+    os.Exit(0)
+  }
 
 	_, err := os.Stat(cachePath)
 	if os.IsNotExist(err) {
